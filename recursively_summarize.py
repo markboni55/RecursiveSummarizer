@@ -23,15 +23,16 @@ def gpt3_completion(prompt, engine='gpt-4', temp=0.7, top_p=1.0, tokens=2000, fr
     retry = 0
     while True:
         try:
-            response = openai.ChatCompletion.create(  # Updated to ChatCompletion
-                model=engine,  # Updated parameter to 'model'
-                messages=[
-                    {"role": "system", "content": "You are a helpful assistant."},
-                    {"role": "user", "content": prompt}
-                ],
+            response = openai.ChatCompletion.create(
+                model=engine,
+                messages=[{"role": "system", "content": "You are a helpful assistant."}, {"role": "user", "content": prompt}],
+                temperature=temp,
                 max_tokens=tokens,
+                top_p=top_p,
+                frequency_penalty=freq_pen,
+                presence_penalty=pres_pen,
             )
-            text = response['choices'][0]['text'].strip()
+            text = response['choices'][0]['message']['content'].strip()
             text = re.sub('\s+', ' ', text)
             filename = '%s_gpt3.txt' % time()
             with open('gpt3_logs/%s' % filename, 'w') as outfile:
