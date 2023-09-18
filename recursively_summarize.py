@@ -23,24 +23,25 @@ def gpt3_completion(prompt, engine='gpt-4', temp=0.7, top_p=1.0, tokens=2000, fr
     retry = 0
     while True:
         try:
-            response = openai.Completion.create(
-                engine=engine,
-                prompt=prompt,
-                temperature=temp,
+            response = openai.ChatCompletion.create(  # Updated to ChatCompletion
+                model=engine,  # Updated parameter to 'model'
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": prompt}
+                ],
                 max_tokens=tokens,
-                top_p=top_p,
-                frequency_penalty=freq_pen,
-                presence_penalty=pres_pen,
-                stop=stop)
+            )
             text = response['choices'][0]['text'].strip()
             text = re.sub('\s+', ' ', text)
             filename = '%s_gpt3.txt' % time()
             with open('gpt3_logs/%s' % filename, 'w') as outfile:
                 outfile.write('PROMPT:\n\n' + prompt + '\n\n==========\n\nRESPONSE:\n\n' + text)
             return text
-        except Exception as oops:
+        except openai.error.OpenAIError as oops:  # Changed to catch OpenAIError
             retry += 1
-            if retry >= max_retry:
+            if "Rate limit" in str(oops):
+                sleep(60)  # Sleep for 60 seconds if a rate limit error occurs
+            elif retry >= max_retry:
                 return "GPT3 error: %s" % oops
             print('Error communicating with OpenAI:', oops)
             sleep(1)
